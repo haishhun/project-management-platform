@@ -6,6 +6,11 @@ requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.0",
     "fastapi>=0.142.2",
+    "httpx>=0.28.1",
+    "mypy>=2.4.0",
     "postgres>=4.0",
+    "psycopg[binary]>=3.3.6",
+    "pytest>=9.1.1",
     "ruff>=0.16.10",
+    "uvicorn>=0.54.0",
 ]
