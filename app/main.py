@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.api.routes import health_router
 from app.core.logging import setup_logging
-
+from app.core.request_logging import request_logger
 
 setup_logging()
 
@@ -19,7 +19,7 @@ app = FastAPI(
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
 )
-
+app.middleware("http")(request_logger)
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
