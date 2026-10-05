@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.api.routes import health_router
+from app.core.logging import setup_logging
+import logging
+
+setup_logging()
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -8,6 +14,7 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 app.include_router(health_router)
+logger.info("Application started")
 
 
 # app.include_router(api_router, prefix=settings.API_V1_PREFIX)
