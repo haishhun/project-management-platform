@@ -10,6 +10,7 @@ dependencies = [
     "mypy>=2.4.0",
     "postgres>=4.0",
     "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.15.0",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
     "uvicorn[standard]>=0.54.0",
