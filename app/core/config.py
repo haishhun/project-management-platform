@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import PostgresDsn, computed_field, field_validator, model_validator
+from pydantic import PostgresDsn, SecretStr, computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
+    POSTGRES_PASSWORD: SecretStr
     POSTGRES_DB: str
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
             PostgresDsn.build(
                 scheme="postgresql+psycopg",
                 username=self.POSTGRES_USER,
-                password=self.POSTGRES_PASSWORD,
+                password=self.POSTGRES_PASSWORD.get_secret_value(),
                 host=self.POSTGRES_HOST,
                 port=self.POSTGRES_PORT,
                 path=self.POSTGRES_DB,
