@@ -10,7 +10,7 @@ engine = create_engine(
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=10,
-    pool_recycle=1800
+    pool_recycle=1800,
 )
 
 SessionLocal = sessionmaker(
@@ -18,6 +18,7 @@ SessionLocal = sessionmaker(
     autoflush=False,
     expire_on_commit=False,
 )
+
 
 def get_db() -> Generator[Session, None, None]:
     with SessionLocal() as db:

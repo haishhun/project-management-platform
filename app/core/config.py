@@ -1,7 +1,13 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import PostgresDsn, SecretStr, computed_field, field_validator, model_validator
+from pydantic import (
+    PostgresDsn,
+    SecretStr,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
