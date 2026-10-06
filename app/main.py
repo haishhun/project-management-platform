@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -14,12 +15,23 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Starting up...")
+    try:
+        yield
+    finally:
+        print("Shutting down...")
+
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 app.middleware("http")(request_logger)
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -28,7 +40,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(health_router)
-logger.info("Application started")
 
 
 # app.include_router(api_router, prefix=settings.API_V1_PREFIX)
