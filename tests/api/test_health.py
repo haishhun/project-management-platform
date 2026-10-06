@@ -11,6 +11,7 @@ def test_database_health_endpoint():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+
 def test_api_health_endpoint():
     response = client.get("health/live")
 
