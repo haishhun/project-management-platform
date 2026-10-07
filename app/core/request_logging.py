@@ -5,8 +5,18 @@ from fastapi import Request
 
 logger = logging.getLogger(__name__)
 
+QUIET_PATHS = {"/health/live"}
+
 
 async def request_logger(request: Request, call_next):
+    if request.url.path in QUIET_PATHS:
+        response = await call_next(request)
+        if response.status_code >= 400:
+            logger.warning(
+                "%s %s -> %s", request.method, request.url.path, response.status_code
+            )
+        return response
+
     start = time.perf_counter()
     status_code = 500
     try:
