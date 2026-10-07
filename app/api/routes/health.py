@@ -1,10 +1,11 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health", tags=["health"])

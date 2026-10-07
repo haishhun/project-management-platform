@@ -1,18 +1,16 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Request
+from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-
-from fastapi import FastAPI
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
-from app.core.config import settings
 from app.api.routes import health_router
+from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.request_logging import request_logger
-from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
-from sqlalchemy import text
 from app.db.session import engine
 
 setup_logging()
