@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ResourceDoesNotExistException
 from app.models import User
 
 
@@ -32,3 +33,26 @@ class UserRepository:
         query = select(User).where(User.email == user_email)
         result = self.db.execute(query)
         return result.scalar_one_or_none()
+
+    def update(
+        self,
+        user_id: UUID,
+        *,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
+    ) -> User:
+        user = self.get_by_id(user_id)
+        if user is None:
+            raise ResourceDoesNotExistException("User does not exist.")
+
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if email is not None:
+            user.email = email
+
+        self.db.commit()
+        self.db.refresh(user)
+        return user
