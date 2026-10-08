@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,7 +9,10 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 
-TEST_DB_URL = "postgresql+psycopg://test:test@localhost:5434/app_test"
+TEST_DB_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+psycopg://test:test@localhost:5434/app_test",
+)
 
 
 @pytest.fixture(scope="session")
