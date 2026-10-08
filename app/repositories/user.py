@@ -56,3 +56,12 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def delete(self, user_id: UUID) -> None:
+        user = self.get_by_id(user_id)
+
+        if user is None:
+            raise ResourceDoesNotExistException("User does not exist.")
+
+        self.db.delete(user)
+        self.db.commit()
