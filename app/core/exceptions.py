@@ -20,3 +20,7 @@ class UnauthorizedException(ApplicationException):
 
 class ForbiddenException(ApplicationException):
     pass
+
+
+class EmailAlreadyExistsException(ApplicationException):
+    pass
