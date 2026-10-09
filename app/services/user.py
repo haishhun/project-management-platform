@@ -3,7 +3,10 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import EmailAlreadyExistsException, ResourceDoesNotExistException
+from app.core.exceptions import (
+    EmailAlreadyExistsException,
+    ResourceDoesNotExistException,
+)
 from app.core.security import hash_password
 from app.models import User
 from app.repositories import UserRepository
