@@ -53,8 +53,7 @@ class UserRepository:
         if email is not None:
             user.email = email
 
-        self.db.commit()
-        self.db.refresh(user)
+        self.db.flush()
         return user
 
     def delete(self, user_id: UUID) -> None:
@@ -64,4 +63,4 @@ class UserRepository:
             raise ResourceDoesNotExistException("User does not exist.")
 
         self.db.delete(user)
-        self.db.commit()
+        self.db.flush()
