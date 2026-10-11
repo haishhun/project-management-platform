@@ -14,6 +14,13 @@ def test_create_and_get_by_id(session):
     )
     assert repo.get_by_id(user.id).email == "a@test.com"
 
+def test_create_and_get_by_email(session):
+    repo = UserRepository(session)
+    user = repo.create(
+        first_name="Test1", last_name="Test2", email="a@test.com", password_hash="x"
+    )
+    assert repo.get_by_email(user.email).first_name == "Test1"
+
 
 def test_get_by_email_returns_none_when_missing(session):
     assert UserRepository(session).get_by_email("nope@test.com") is None
