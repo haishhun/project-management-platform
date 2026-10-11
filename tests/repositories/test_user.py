@@ -14,6 +14,7 @@ def test_create_and_get_by_id(session):
     )
     assert repo.get_by_id(user.id).email == "a@test.com"
 
+
 def test_create_and_get_by_email(session):
     repo = UserRepository(session)
     user = repo.create(

@@ -1,9 +1,11 @@
 from uuid import UUID
 
 import pytest
-from sqlalchemy.exc import IntegrityError
 
-from app.core.exceptions import ResourceDoesNotExistException, EmailAlreadyExistsException
+from app.core.exceptions import (
+    EmailAlreadyExistsException,
+    ResourceDoesNotExistException,
+)
 from app.services.user import UserService
 
 
@@ -14,6 +16,7 @@ def test_create_and_get_by_id(session):
     )
     assert service.get_by_id(user.id).email == "a@test.com"
 
+
 def test_create_and_get_by_email(session):
     service = UserService(session)
     user = service.register(
@@ -21,8 +24,10 @@ def test_create_and_get_by_email(session):
     )
     assert service.get_by_email(user.email).first_name == "Test1"
 
+
 def test_get_by_email_returns_none_when_missing(session):
     assert UserService(session).get_by_email("nope@test.com") is None
+
 
 def test_create_duplicate_email_fails(session):
     service = UserService(session)
@@ -31,7 +36,10 @@ def test_create_duplicate_email_fails(session):
     )
     with pytest.raises(EmailAlreadyExistsException):
         service.register(
-            first_name="Test1", last_name="Test2", email="a@test.com", password="password"
+            first_name="Test1",
+            last_name="Test2",
+            email="a@test.com",
+            password="password",
         )
 
 
