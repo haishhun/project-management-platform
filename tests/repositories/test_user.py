@@ -23,6 +23,13 @@ def test_create_and_get_by_email(session):
     assert repo.get_by_email(user.email).first_name == "Test1"
 
 
+def test_get_by_id_returns_none_when_missing(session):
+    assert (
+        UserRepository(session).get_by_id(UUID("579d2ad8-30a4-4bcd-b98a-484b1faa44e1"))
+        is None
+    )
+
+
 def test_get_by_email_returns_none_when_missing(session):
     assert UserRepository(session).get_by_email("nope@test.com") is None
 
