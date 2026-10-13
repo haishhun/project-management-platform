@@ -106,7 +106,7 @@ def test_user_update_duplicate_email_fails(session):
     )
 
     with pytest.raises(EmailAlreadyExistsException):
-        assert service.update(
+        service.update(
             user_2.id,
             first_name="Updated1",
             last_name="Updated2",
