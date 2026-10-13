@@ -45,6 +45,63 @@ def test_create_duplicate_email_fails(session):
         )
 
 
+def test_user_update_duplicate_email_fails(session):
+    repo = UserRepository(session)
+
+    user1 = repo.create(
+        email="first@test.com",
+        password_hash="hash1",
+        first_name="First",
+        last_name="User",
+    )
+    user2 = repo.create(
+        email="second@test.com",
+        password_hash="hash2",
+        first_name="Second",
+        last_name="User",
+    )
+
+    with pytest.raises(IntegrityError):
+        repo.update(user1.id, email=user2.email)
+
+    session.rollback()
+
+
+def test_user_update_without_fields_preserves_values(session):
+    repo = UserRepository(session)
+
+    user = repo.create(
+        email="original@test.com",
+        password_hash="original_hash",
+        first_name="Original",
+        last_name="User",
+    )
+
+    updated_user = repo.update(user.id)
+
+    assert updated_user.id == user.id
+    assert updated_user.email == "original@test.com"
+    assert updated_user.first_name == "Original"
+    assert updated_user.last_name == "User"
+    assert updated_user.password_hash == "original_hash"
+
+
+def test_create_can_be_rolled_back(session):
+    repo = UserRepository(session)
+
+    user = repo.create(
+        email="rollback@test.com",
+        password_hash="hash",
+        first_name="Rollback",
+        last_name="Test",
+    )
+    user_id = user.id
+
+    session.rollback()
+
+    assert repo.get_by_id(user_id) is None
+
+
 def test_user_update(session):
     repo = UserRepository(session)
     user = repo.create(
