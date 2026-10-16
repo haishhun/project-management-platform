@@ -17,7 +17,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.db.base import Base
-from app.models import Project, ProjectMember, User  # noqa
+from app.models import Project, ProjectMember, Task, User  # noqa
 
 target_metadata = Base.metadata
 
