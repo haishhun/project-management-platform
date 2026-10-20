@@ -49,3 +49,12 @@ class ProjectRepository:
 
         self.db.flush()
         return project
+
+    def delete(self, project_id: UUID) -> None:
+        project = self.get_by_id(project_id)
+
+        if project is None:
+            raise ResourceDoesNotExistException("Project does not exist.")
+
+        self.db.delete(project)
+        self.db.flush()
