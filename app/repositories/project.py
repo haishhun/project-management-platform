@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ResourceDoesNotExistException
 from app.models import Project
 
 
@@ -31,3 +32,20 @@ class ProjectRepository:
         )
         result = self.db.execute(query)
         return result.scalars().all()
+
+    def update(
+        self, project_id: UUID, name: str | None = None, description: str | None = None
+    ) -> Project:
+        project = self.get_by_id(project_id)
+
+        if project is None:
+            raise ResourceDoesNotExistException("Project does not exist.")
+
+        if name is not None:
+            project.name = name
+
+        if description is not None:
+            project.description = description
+
+        self.db.flush()
+        return project
