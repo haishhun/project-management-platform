@@ -50,8 +50,8 @@ jobs:
       - name: Run database migrations
         run: uv run alembic upgrade head
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with coverage
+        run: uv run pytest --cov=app --cov-report=term-missing
 
       - name: Run Ruff check
         run: uv run ruff check .
