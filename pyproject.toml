@@ -29,3 +29,8 @@ plugins = [
     "pydantic.mypy"
 ]
 explicit_package_bases = true
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]
