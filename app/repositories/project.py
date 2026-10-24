@@ -26,7 +26,7 @@ class ProjectRepository:
     def get_all(self, limit: int = 50, offset: int = 0) -> Sequence[Project]:
         query = (
             select(Project)
-            .order_by(Project.id)
+            .order_by(Project.created_at, Project.id)
             .limit(limit=limit)
             .offset(offset=offset)
         )
