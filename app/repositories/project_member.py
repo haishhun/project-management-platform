@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -32,3 +33,12 @@ class ProjectMemberRepository:
         )
         result = self.db.execute(query)
         return result.scalar_one_or_none()
+
+    def get_project_memberships(self, project_id: UUID) -> Sequence[ProjectMember]:
+        query = (
+            select(ProjectMember)
+            .where(ProjectMember.project_id == project_id)
+            .order_by(ProjectMember.joined_at)
+        )
+        result = self.db.execute(query)
+        return result.scalars().all()
