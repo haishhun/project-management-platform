@@ -55,3 +55,12 @@ class ProjectMemberRepository:
         membership.role = role
         self.db.flush()
         return membership
+
+    def delete(self, project_id: UUID, user_id: UUID) -> None:
+        membership = self.get_by_project_and_member(
+            project_id=project_id, user_id=user_id
+        )
+        if membership is None:
+            raise ResourceDoesNotExistException("Membership does not exist.")
+        self.db.delete(membership)
+        self.db.flush()
