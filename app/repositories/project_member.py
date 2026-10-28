@@ -1,8 +1,7 @@
-from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.models import ProjectMember
 from app.models.project_member import ProjectRole
@@ -25,7 +24,7 @@ class ProjectMemberRepository:
         return new_member
 
     def get_by_project_and_member(
-            self, project_id: UUID, user_id: UUID
+        self, project_id: UUID, user_id: UUID
     ) -> ProjectMember | None:
         query = select(ProjectMember).where(
             ProjectMember.project_id == project_id,
@@ -33,4 +32,3 @@ class ProjectMemberRepository:
         )
         result = self.db.execute(query)
         return result.scalar_one_or_none()
-
