@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ResourceDoesNotExistException
 from app.models import ProjectMember
 from app.models.project_member import ProjectRole
 
@@ -42,3 +43,15 @@ class ProjectMemberRepository:
         )
         result = self.db.execute(query)
         return result.scalars().all()
+
+    def update(
+        self, project_id: UUID, user_id: UUID, role: ProjectRole
+    ) -> ProjectMember:
+        membership = self.get_by_project_and_member(
+            project_id=project_id, user_id=user_id
+        )
+        if membership is None:
+            raise ResourceDoesNotExistException("Membership does not exist.")
+        membership.role = role
+        self.db.flush()
+        return membership
