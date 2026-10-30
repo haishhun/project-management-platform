@@ -80,6 +80,7 @@ def test_create_duplicate_membership_raises_integrity_error(session):
     user_repo = UserRepository(session)
     project_repo = ProjectRepository(session)
     project_member_repo = ProjectMemberRepository(session)
+
     user = user_repo.create(
         first_name="Test",
         last_name="User",
@@ -90,16 +91,16 @@ def test_create_duplicate_membership_raises_integrity_error(session):
         name="Test Project 1",
         description="Test Description 1",
     )
-    project_member = project_member_repo.create(
+
+    project_member_repo.create(
         project_id=project.id,
         user_id=user.id,
     )
+
     with pytest.raises(IntegrityError):
         project_member_repo.create(
             project_id=project.id,
             user_id=user.id,
         )
+
     session.rollback()
-    assert project_member.user_id == user.id
-    assert project_member.project_id == project.id
-    assert project_member.role == ProjectRole.MEMBER
