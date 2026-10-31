@@ -1,6 +1,37 @@
+from datetime import date
+from uuid import UUID
+
 from sqlalchemy.orm import Session
+
+from app.models.task import Task, TaskPriority, TaskStatus
 
 
 class TaskRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
+
+    def create(
+        self,
+        project_id: UUID,
+        title: str,
+        created_by_id: UUID,
+        status: TaskStatus = TaskStatus.TODO,
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        description: str | None = None,
+        assigned_to_id: UUID | None = None,
+        due_date: date | None = None,
+    ) -> Task:
+        new_task = Task(
+            project_id=project_id,
+            title=title,
+            description=description,
+            status=status,
+            priority=priority,
+            created_by_id=created_by_id,
+            assigned_to_id=assigned_to_id,
+            due_date=due_date,
+        )
+        self.db.add(new_task)
+        self.db.flush()
+
+        return new_task
