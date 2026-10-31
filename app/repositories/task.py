@@ -1,6 +1,7 @@
 from datetime import date
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.task import Task, TaskPriority, TaskStatus
@@ -35,3 +36,8 @@ class TaskRepository:
         self.db.flush()
 
         return new_task
+
+    def get_by_id(self, task_id: UUID) -> Task | None:
+        query = select(Task).where(Task.id == task_id)
+        result = self.db.execute(query)
+        return result.scalar_one_or_none()
