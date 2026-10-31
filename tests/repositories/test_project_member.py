@@ -283,3 +283,36 @@ def test_update_project_membership_not_found(session):
         project_member_repo.update(
             project_id=uuid4(), user_id=uuid4(), role=ProjectRole.OWNER
         )
+
+
+def test_delete_project_membership(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    project_member_repo.create(
+        project_id=project.id, user_id=user.id, role=ProjectRole.MEMBER
+    )
+    project_member_repo.delete(project_id=project.id, user_id=user.id)
+
+    search_result = project_member_repo.get_by_project_and_member(
+        project_id=project.id, user_id=user.id
+    )
+
+    assert search_result is None
+
+
+def test_delete_project_membership_not_found(session):
+    project_member_repo = ProjectMemberRepository(session)
+
+    with pytest.raises(ResourceDoesNotExistException):
+        project_member_repo.delete(project_id=uuid4(), user_id=uuid4())
