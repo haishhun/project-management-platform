@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from app.core.exceptions import ResourceDoesNotExistException
 from app.models.project_member import ProjectRole
 from app.repositories import ProjectRepository, UserRepository
 from app.repositories.project_member import ProjectMemberRepository
@@ -247,3 +248,38 @@ def test_create_duplicate_membership_raises_integrity_error(session):
         )
 
     session.rollback()
+
+
+def test_update_project_membership_role(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    project_member = project_member_repo.create(
+        project_id=project.id, user_id=user.id, role=ProjectRole.MEMBER
+    )
+    updated_member = project_member_repo.update(
+        project_id=project.id, user_id=user.id, role=ProjectRole.OWNER
+    )
+
+    assert updated_member.role == ProjectRole.OWNER
+    assert updated_member.project_id == project.id
+    assert updated_member.user_id == user.id
+
+
+def test_update_project_membership_not_found(session):
+    project_member_repo = ProjectMemberRepository(session)
+
+    with pytest.raises(ResourceDoesNotExistException):
+        project_member_repo.update(
+            project_id=uuid4(), user_id=uuid4(), role=ProjectRole.OWNER
+        )
