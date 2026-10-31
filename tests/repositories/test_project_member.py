@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -72,6 +73,103 @@ def test_get_by_project_and_member_not_found(session):
     )
 
     assert search_result is None
+
+
+def test_get_project_memberships(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+
+    user1 = user_repo.create(
+        first_name="Test1",
+        last_name="User1",
+        email="test1@test.com",
+        password_hash="original_hash1",
+    )
+    user2 = user_repo.create(
+        first_name="Test2",
+        last_name="User2",
+        email="test2@test.com",
+        password_hash="original_hash2",
+    )
+    project1 = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    project2 = project_repo.create(
+        name="Test Project 2",
+        description="Test Description 2",
+    )
+    project_member_repo.create(
+        project_id=project1.id,
+        user_id=user1.id,
+        role=ProjectRole.OWNER,
+    )
+    project_member_repo.create(
+        project_id=project1.id,
+        user_id=user2.id,
+        role=ProjectRole.MEMBER,
+    )
+    project_member_repo.create(
+        project_id=project2.id,
+        user_id=user1.id,
+        role=ProjectRole.OWNER,
+    )
+    project_member_repo.create(
+        project_id=project2.id,
+        user_id=user2.id,
+        role=ProjectRole.MEMBER,
+    )
+    search_result = project_member_repo.get_project_memberships(project_id=project1.id)
+
+    assert len(search_result) == 2
+    assert search_result[0].project_id == project1.id
+    assert search_result[0].user_id == user1.id
+    assert search_result[1].project_id == project1.id
+    assert search_result[1].user_id == user2.id
+
+
+def test_get_project_memberships_ordered_by_joined_at(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+
+    user1 = user_repo.create(
+        first_name="Test1",
+        last_name="User1",
+        email="test1@test.com",
+        password_hash="original_hash1",
+    )
+    user2 = user_repo.create(
+        first_name="Test2",
+        last_name="User2",
+        email="test2@test.com",
+        password_hash="original_hash2",
+    )
+    project1 = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    project_member_1 = project_member_repo.create(
+        project_id=project1.id,
+        user_id=user1.id,
+        role=ProjectRole.OWNER,
+    )
+    project_member_2 = project_member_repo.create(
+        project_id=project1.id,
+        user_id=user2.id,
+        role=ProjectRole.MEMBER,
+    )
+    project_member_1.joined_at = datetime(2026, 2, 1, tzinfo=UTC)
+    project_member_2.joined_at = datetime(2026, 1, 2, tzinfo=UTC)
+    session.flush()
+
+    search_result = project_member_repo.get_project_memberships(project_id=project1.id)
+
+    assert len(search_result) == 2
+    assert search_result[0].user_id == user2.id
+    assert search_result[1].user_id == user1.id
+    assert search_result[0].joined_at < search_result[1].joined_at
 
 
 def test_create_project_membership_member(session):
