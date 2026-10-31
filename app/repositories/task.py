@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date
 from uuid import UUID
 
@@ -41,3 +42,12 @@ class TaskRepository:
         query = select(Task).where(Task.id == task_id)
         result = self.db.execute(query)
         return result.scalar_one_or_none()
+
+    def get_all_by_project(self, project_id: UUID) -> Sequence[Task]:
+        query = (
+            select(Task)
+            .where(Task.project_id == project_id)
+            .order_by(Task.created_at.asc(), Task.id.asc())
+        )
+        result = self.db.execute(query)
+        return result.scalars().all()
