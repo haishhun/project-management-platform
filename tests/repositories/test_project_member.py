@@ -264,7 +264,7 @@ def test_update_project_membership_role(session):
         name="Test Project 1",
         description="Test Description 1",
     )
-    project_member = project_member_repo.create(
+    project_member_repo.create(
         project_id=project.id, user_id=user.id, role=ProjectRole.MEMBER
     )
     updated_member = project_member_repo.update(
