@@ -1,12 +1,17 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import UUID as SQLAlchemyUUID
 from sqlalchemy import DateTime, Enum, ForeignKey, Index, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.project import Project
+    from app.models.user import User
 
 
 class ProjectRole(StrEnum):
@@ -48,4 +53,11 @@ class ProjectMember(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+    project: Mapped["Project"] = relationship(
+        back_populates="memberships",
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="project_memberships",
     )

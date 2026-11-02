@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import UUID as SQLAlchemyUUID
@@ -13,9 +14,13 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.project import Project
+    from app.models.user import User
 
 
 class TaskStatus(StrEnum):
@@ -84,4 +89,17 @@ class Task(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    project: Mapped["Project"] = relationship(
+        back_populates="tasks",
+    )
+
+    created_by: Mapped["User"] = relationship(
+        back_populates="created_tasks",
+        foreign_keys=[created_by_id],
+    )
+
+    assigned_to: Mapped["User | None"] = relationship(
+        back_populates="assigned_tasks",
+        foreign_keys=[assigned_to_id],
     )

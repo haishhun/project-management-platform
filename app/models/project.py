@@ -1,11 +1,16 @@
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import UUID as SQLAlchemyUUID
 from sqlalchemy import DateTime, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.project_member import ProjectMember
+    from app.models.task import Task
 
 
 class Project(Base):
@@ -28,4 +33,11 @@ class Project(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
         server_default=func.now(),
+    )
+    memberships: Mapped[list["ProjectMember"]] = relationship(
+        back_populates="project",
+    )
+
+    tasks: Mapped[list["Task"]] = relationship(
+        back_populates="project",
     )
