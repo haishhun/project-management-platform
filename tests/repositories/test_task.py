@@ -127,16 +127,17 @@ def test_all_by_project(session):
         title="Test Task 2",
         created_by_id=user.id,
     )
-    task1.created_at = datetime(2027, 11, 1, tzinfo=UTC)
-    task2.created_at = datetime(2028, 11, 1, tzinfo=UTC)
+    task1.created_at = datetime(2028, 11, 1, tzinfo=UTC)
+    task2.created_at = datetime(2027, 11, 1, tzinfo=UTC)
 
     session.flush()
 
     all_tasks = task_repo.get_all_by_project(project_id=project.id)
 
     assert len(all_tasks) == 2
-    assert all_tasks[0].title == "Test Task 1"
-    assert all_tasks[1].title == "Test Task 2"
+    assert all_tasks[0].title == "Test Task 2"
+    assert all_tasks[1].title == "Test Task 1"
+    assert all_tasks[0].created_at < all_tasks[1].created_at
 
 
 def test_all_by_project_empty(session):
