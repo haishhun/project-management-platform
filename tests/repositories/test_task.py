@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from uuid import uuid4
 
 from app.models.task import TaskPriority, TaskStatus
@@ -98,3 +98,48 @@ def test_get_by_id_not_found(session):
 
     search_result = task_repo.get_by_id(uuid4())
     assert search_result is None
+
+
+def test_all_by_project(session):
+    task_repo = TaskRepository(session)
+    project_repo = ProjectRepository(session)
+    user_repo = UserRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    task1 = task_repo.create(
+        project_id=project.id,
+        title="Test Task 1",
+        created_by_id=user.id,
+    )
+    task2 = task_repo.create(
+        project_id=project.id,
+        title="Test Task 2",
+        created_by_id=user.id,
+    )
+    task1.created_at = datetime(2027, 11, 1, tzinfo=UTC)
+    task2.created_at = datetime(2028, 11, 1, tzinfo=UTC)
+    all_tasks = task_repo.get_all_by_project(project_id=project.id)
+
+    assert len(all_tasks) == 2
+    assert all_tasks[0].title == "Test Task 1"
+    assert all_tasks[1].title == "Test Task 2"
+
+
+def test_all_by_project_empty(session):
+    task_repo = TaskRepository(session)
+    project_repo = ProjectRepository(session)
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    all_tasks = task_repo.get_all_by_project(project_id=project.id)
+
+    assert all_tasks == []
