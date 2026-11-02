@@ -126,6 +126,9 @@ def test_all_by_project(session):
     )
     task1.created_at = datetime(2027, 11, 1, tzinfo=UTC)
     task2.created_at = datetime(2028, 11, 1, tzinfo=UTC)
+
+    session.flush()
+
     all_tasks = task_repo.get_all_by_project(project_id=project.id)
 
     assert len(all_tasks) == 2
