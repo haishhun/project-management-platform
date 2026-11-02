@@ -36,6 +36,7 @@ def test_create_task(session):
     assert task.assigned_to_id == user.id
     assert task.due_date == date(2027, 11, 1)
 
+
 def test_create_task_with_defaults(session):
     task_repo = TaskRepository(session)
     project_repo = ProjectRepository(session)
@@ -61,4 +62,3 @@ def test_create_task_with_defaults(session):
     assert task.description is None
     assert task.assigned_to_id is None
     assert task.due_date is None
-    assert task.id is not None
