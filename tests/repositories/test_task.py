@@ -1,6 +1,9 @@
 from datetime import UTC, date, datetime
 from uuid import uuid4
 
+import pytest
+
+from app.core.exceptions import ResourceDoesNotExistException
 from app.models.task import TaskPriority, TaskStatus
 from app.repositories import ProjectRepository, TaskRepository, UserRepository
 
@@ -146,3 +149,84 @@ def test_all_by_project_empty(session):
     all_tasks = task_repo.get_all_by_project(project_id=project.id)
 
     assert all_tasks == []
+
+
+def test_update_task(session):
+    task_repo = TaskRepository(session)
+    project_repo = ProjectRepository(session)
+    user_repo = UserRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    task = task_repo.create(
+        project_id=project.id,
+        title="Original Task",
+        description="Original Description",
+        status=TaskStatus.TODO,
+        priority=TaskPriority.LOW,
+        created_by_id=user.id,
+    )
+    task_repo.update(
+        task_id=task.id,
+        title="Updated Title",
+        status=TaskStatus.IN_PROGRESS,
+        priority=TaskPriority.CRITICAL,
+    )
+    updated_task = task_repo.get_by_id(task.id)
+
+    assert updated_task is not None
+    assert updated_task.id == task.id
+    assert updated_task.title == "Updated Title"
+    assert updated_task.description == "Original Description"
+    assert updated_task.status == TaskStatus.IN_PROGRESS
+    assert updated_task.priority == TaskPriority.CRITICAL
+    assert updated_task.assigned_to_id is None
+    assert updated_task.due_date is None
+
+
+def test_update_task_partial(session):
+    task_repo = TaskRepository(session)
+    project_repo = ProjectRepository(session)
+    user_repo = UserRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+    task = task_repo.create(
+        project_id=project.id,
+        title="Original Task",
+        description="Original Description",
+        status=TaskStatus.TODO,
+        priority=TaskPriority.LOW,
+        created_by_id=user.id,
+    )
+
+    task_repo.update(task_id=task.id, title="Updated Title")
+    updated_task = task_repo.get_by_id(task.id)
+
+    assert updated_task is not None
+    assert updated_task.id == task.id
+    assert updated_task.title == "Updated Title"
+    assert updated_task.description == "Original Description"
+    assert updated_task.status == TaskStatus.TODO
+    assert updated_task.priority == TaskPriority.LOW
+
+
+def test_update_task_not_found(session):
+    task_repo = TaskRepository(session)
+
+    with pytest.raises(ResourceDoesNotExistException):
+        task_repo.update(task_id=uuid4())
