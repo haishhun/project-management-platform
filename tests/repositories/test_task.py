@@ -228,6 +228,47 @@ def test_update_task_partial(session):
     assert updated_task.due_date is None
 
 
+def test_update_task_clears_nullable_fields(session):
+    task_repo = TaskRepository(session)
+    project_repo = ProjectRepository(session)
+    user_repo = UserRepository(session)
+
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+
+    project = project_repo.create(
+        name="Test Project 1",
+        description="Test Description 1",
+    )
+
+    task = task_repo.create(
+        project_id=project.id,
+        title="Test Task 1",
+        created_by_id=user.id,
+        description="Original Description",
+        assigned_to_id=user.id,
+        due_date=date(2027, 11, 1),
+    )
+
+    task_repo.update(
+        task_id=task.id,
+        description=None,
+        assigned_to_id=None,
+        due_date=None,
+    )
+
+    updated_task = task_repo.get_by_id(task.id)
+
+    assert updated_task is not None
+    assert updated_task.description is None
+    assert updated_task.assigned_to_id is None
+    assert updated_task.due_date is None
+
+
 def test_update_task_not_found(session):
     task_repo = TaskRepository(session)
 

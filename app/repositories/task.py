@@ -9,6 +9,13 @@ from app.core.exceptions import ResourceDoesNotExistException
 from app.models.task import Task, TaskPriority, TaskStatus
 
 
+class _Unset:
+    pass
+
+
+UNSET = _Unset()
+
+
 class TaskRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -58,26 +65,26 @@ class TaskRepository:
         task_id: UUID,
         *,
         title: str | None = None,
-        description: str | None = None,
+        description: str | None | _Unset = UNSET,
         status: TaskStatus | None = None,
         priority: TaskPriority | None = None,
-        assigned_to_id: UUID | None = None,
-        due_date: date | None = None,
+        assigned_to_id: UUID | None | _Unset = UNSET,
+        due_date: date | None | _Unset = UNSET,
     ) -> Task:
         task = self.get_by_id(task_id=task_id)
         if task is None:
             raise ResourceDoesNotExistException("Task does not exist.")
         if title is not None:
             task.title = title
-        if description is not None:
+        if not isinstance(description, _Unset):
             task.description = description
         if status is not None:
             task.status = status
         if priority is not None:
             task.priority = priority
-        if assigned_to_id is not None:
+        if not isinstance(assigned_to_id, _Unset):
             task.assigned_to_id = assigned_to_id
-        if due_date is not None:
+        if not isinstance(due_date, _Unset):
             task.due_date = due_date
         self.db.flush()
 
