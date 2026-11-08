@@ -63,3 +63,26 @@ def test_user_task_relationships(session):
 
     assert task.created_by is creator
     assert task.assigned_to is assignee
+
+
+def test_project_task_relationships(session):
+    user = User(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+
+    project = Project(name="Test Project")
+
+    task = Task(
+        title="Implement authentication",
+        project=project,
+        created_by=user,
+    )
+
+    session.add_all([user, project, task])
+    session.flush()
+
+    assert task in project.tasks
+    assert task.project is project
