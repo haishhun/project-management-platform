@@ -1,11 +1,4 @@
-from uuid import uuid4
 
-import pytest
-
-from app.models import Project
-from app.models.project_member import ProjectRole
-from app.repositories import ProjectMemberRepository, UserRepository
-from app.services.project import ProjectService
 from uuid import UUID
 
 import pytest
@@ -13,7 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.models import Project
+from app.models.project_member import ProjectRole
+from app.repositories import ProjectMemberRepository, UserRepository
 from app.services.project import ProjectService
+
 
 def test_create_project_and_assign_owner(session):
     user_repo = UserRepository(session)
@@ -40,6 +36,7 @@ def test_create_project_and_assign_owner(session):
     assert project.description == "A project management platform"
     assert membership.user_id == user.id
     assert membership.role == ProjectRole.OWNER
+
 
 def test_create_project_and_transaction_rollback(session):
     project_service = ProjectService(session)
