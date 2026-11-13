@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ResourceDoesNotExistException
-from app.models import Project
+from app.models import Project, ProjectMember
 
 
 class ProjectRepository:
@@ -30,6 +30,17 @@ class ProjectRepository:
             .limit(limit=limit)
             .offset(offset=offset)
         )
+        result = self.db.execute(query)
+        return result.scalars().all()
+
+    def get_all_by_user(self, user_id: UUID) -> Sequence[Project]:
+        query = (
+            select(Project)
+            .join(ProjectMember)
+            .where(ProjectMember.user_id == user_id)
+            .order_by(Project.created_at, Project.id)
+        )
+
         result = self.db.execute(query)
         return result.scalars().all()
 
