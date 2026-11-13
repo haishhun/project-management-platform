@@ -2,6 +2,10 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import (
+    ForbiddenException,
+    ResourceDoesNotExistException,
+)
 from app.models import Project
 from app.models.project_member import ProjectRole
 from app.repositories import ProjectMemberRepository, ProjectRepository
@@ -33,3 +37,14 @@ class ProjectService:
             self.db.rollback()
             raise
         return new_project
+
+    def get_by_id(self, project_id: UUID, user_id: UUID) -> Project:
+        project = self.project_repo.get_by_id(project_id=project_id)
+        if project is None:
+            raise ResourceDoesNotExistException("The project does not exist.")
+        membership = self.project_member_repo.get_by_project_and_member(
+            project_id=project_id, user_id=user_id
+        )
+        if membership is None:
+            raise ForbiddenException("Access Forbidden.")
+        return project
