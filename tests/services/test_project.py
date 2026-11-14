@@ -138,3 +138,85 @@ def test_get_project_by_id_not_found(session):
 
     with pytest.raises(ResourceDoesNotExistException):
         project_service.get_by_id(project_id=uuid4(), user_id=uuid4())
+
+
+def test_list_by_user_returns_only_memberships(session):
+    project_service = ProjectService(session)
+    user_repo = UserRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user1 = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    user2 = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+
+    project1 = project_service.create(
+        owner_id=user1.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+
+    project2 = project_service.create(
+        owner_id=user2.id,
+        name="2 Backend Platform",
+        description="A project management platform",
+    )
+    project3 = project_service.create(
+        owner_id=user2.id,
+        name="3 Backend Platform",
+        description="A project management platform",
+    )
+
+    project_member_repo.create(
+        project_id=project2.id,
+        user_id=user1.id,
+        role=ProjectRole.MEMBER,
+    )
+    projects = project_service.list_by_user(user_id=user1.id)
+
+    assert len(projects) == 2
+    assert {project.id for project in projects} == {
+        project1.id,
+        project2.id,
+    }
+    assert project3.id not in {project.id for project in projects}
+
+
+def test_list_by_user_returns_empty_list(session):
+    project_service = ProjectService(session)
+    user_repo = UserRepository(session)
+    user1 = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    user2 = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+
+    project_service.create(
+        owner_id=user2.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+
+    project_service.create(
+        owner_id=user2.id,
+        name="2 Backend Platform",
+        description="A project management platform",
+    )
+
+    projects = project_service.list_by_user(user_id=user1.id)
+
+    assert projects == []
