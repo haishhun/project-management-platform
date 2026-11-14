@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -48,3 +49,6 @@ class ProjectService:
         if membership is None:
             raise ForbiddenException("Access Forbidden.")
         return project
+
+    def list_by_user(self, user_id: UUID) -> Sequence[Project]:
+        return self.project_repo.get_all_by_user(user_id=user_id)
