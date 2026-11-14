@@ -3,7 +3,8 @@ from uuid import uuid4
 import pytest
 
 from app.core.exceptions import ResourceDoesNotExistException
-from app.repositories import ProjectRepository
+from app.models.project_member import ProjectRole
+from app.repositories import ProjectMemberRepository, ProjectRepository, UserRepository
 
 
 def test_create_project_without_description(session):
@@ -67,6 +68,88 @@ def test_create_and_get_all(session):
 def test_get_all_empty(session):
     repo = ProjectRepository(session)
     assert repo.get_all() == []
+
+
+def test_get_all_by_user(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    membership_repo = ProjectMemberRepository(session)
+
+    user1 = user_repo.create(
+        email="user@test.com",
+        password_hash="test_hash",
+        first_name="John",
+        last_name="Doe",
+    )
+
+    user2 = user_repo.create(
+        email="other@test.com",
+        password_hash="test_hash",
+        first_name="Jane",
+        last_name="Doe",
+    )
+
+    project1 = project_repo.create(name="Project 1")
+    project2 = project_repo.create(name="Project 2")
+    project3 = project_repo.create(name="Project 3")
+
+    membership_repo.create(
+        project_id=project1.id,
+        user_id=user1.id,
+        role=ProjectRole.OWNER,
+    )
+
+    membership_repo.create(
+        project_id=project2.id,
+        user_id=user1.id,
+        role=ProjectRole.MEMBER,
+    )
+
+    membership_repo.create(
+        project_id=project3.id,
+        user_id=user2.id,
+        role=ProjectRole.OWNER,
+    )
+
+    projects = project_repo.get_all_by_user(user1.id)
+
+    assert len(projects) == 2
+    assert {project.id for project in projects} == {
+        project1.id,
+        project2.id,
+    }
+
+
+def test_get_all_by_user_empty(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    membership_repo = ProjectMemberRepository(session)
+
+    user1 = user_repo.create(
+        email="user@test.com",
+        password_hash="test_hash",
+        first_name="John",
+        last_name="Doe",
+    )
+
+    user2 = user_repo.create(
+        email="other@test.com",
+        password_hash="test_hash",
+        first_name="Jane",
+        last_name="Doe",
+    )
+
+    project1 = project_repo.create(name="Project 1")
+
+    membership_repo.create(
+        project_id=project1.id,
+        user_id=user2.id,
+        role=ProjectRole.OWNER,
+    )
+
+    projects = project_repo.get_all_by_user(user1.id)
+
+    assert projects == []
 
 
 def test_get_all_with_limit(session):
