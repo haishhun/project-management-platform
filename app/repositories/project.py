@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ResourceDoesNotExistException
 from app.models import Project, ProjectMember
-from app.repositories.task import UNSET, _Unset
+
+
+class _Unset:
+    pass
+
+
+UNSET = _Unset()
 
 
 class ProjectRepository:
