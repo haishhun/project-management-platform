@@ -220,3 +220,110 @@ def test_list_by_user_returns_empty_list(session):
     projects = project_service.list_by_user(user_id=user1.id)
 
     assert projects == []
+
+
+def test_update_project_as_owner(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    user = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    project = project_service.create(
+        owner_id=user.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    updated_project = project_service.update(
+        project_id=project.id,
+        user_id=user.id,
+        name="Project Management Platform",
+        description="Updated description",
+    )
+
+    session.refresh(project)
+
+    assert updated_project.id == project.id
+    assert project.name == "Project Management Platform"
+    assert project.description == "Updated description"
+
+
+def test_update_project_name_only(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    user = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    project = project_service.create(
+        owner_id=user.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    updated_project = project_service.update(
+        project_id=project.id,
+        user_id=user.id,
+        name="Project Management Platform",
+    )
+
+    session.refresh(project)
+
+    assert updated_project.id == project.id
+    assert project.name == "Project Management Platform"
+    assert project.description == "A project management platform"
+
+
+def test_update_project_description_only(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    user = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    project = project_service.create(
+        owner_id=user.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    updated_project = project_service.update(
+        project_id=project.id, user_id=user.id, description="Updated description"
+    )
+
+    session.refresh(project)
+
+    assert updated_project.id == project.id
+    assert project.name == "Backend Platform"
+    assert project.description == "Updated description"
+
+
+def test_update_project_clears_description(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    user = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    project = project_service.create(
+        owner_id=user.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    updated_project = project_service.update(
+        project_id=project.id,
+        user_id=user.id,
+        description=None,
+    )
+
+    session.refresh(project)
+
+    assert updated_project.description is None
+    assert project.description is None
+    assert project.name == "Backend Platform"
