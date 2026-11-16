@@ -327,3 +327,76 @@ def test_update_project_clears_description(session):
     assert updated_project.description is None
     assert project.description is None
     assert project.name == "Backend Platform"
+
+
+def test_update_project_as_member(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_repo = ProjectMemberRepository(session)
+    owner = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    member = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    project_member_repo.create(
+        project_id=project.id,
+        user_id=member.id,
+        role=ProjectRole.MEMBER,
+    )
+    with pytest.raises(ForbiddenException):
+        project_service.update(
+            project_id=project.id, user_id=member.id, name="New Name"
+        )
+    session.refresh(project)
+
+    assert project.name == "Backend Platform"
+    assert project.description == "A project management platform"
+
+
+def test_update_project_as_non_member(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    owner = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    non_member = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    with pytest.raises(ForbiddenException):
+        project_service.update(
+            project_id=project.id, user_id=non_member.id, name="New Name"
+        )
+
+    session.refresh(project)
+
+    assert project.name == "Backend Platform"
+    assert project.description == "A project management platform"
+
+
+def test_update_project_not_found(session):
+    project_service = ProjectService(session)
+    with pytest.raises(ResourceDoesNotExistException):
+        project_service.update(project_id=uuid4(), user_id=uuid4())
