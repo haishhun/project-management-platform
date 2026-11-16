@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ResourceDoesNotExistException
 from app.models import Project, ProjectMember
+from app.repositories.task import UNSET, _Unset
 
 
 class ProjectRepository:
@@ -45,7 +46,10 @@ class ProjectRepository:
         return result.scalars().all()
 
     def update(
-        self, project_id: UUID, name: str | None = None, description: str | None = None
+        self,
+        project_id: UUID,
+        name: str | None = None,
+        description: str | None | _Unset = UNSET,
     ) -> Project:
         project = self.get_by_id(project_id)
 
@@ -55,7 +59,7 @@ class ProjectRepository:
         if name is not None:
             project.name = name
 
-        if description is not None:
+        if not isinstance(description, _Unset):
             project.description = description
 
         self.db.flush()
