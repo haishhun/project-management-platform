@@ -10,6 +10,7 @@ from app.core.exceptions import (
 from app.models import Project
 from app.models.project_member import ProjectRole
 from app.repositories import ProjectMemberRepository, ProjectRepository
+from app.repositories.project import UNSET, _Unset
 
 
 class ProjectService:
@@ -52,3 +53,43 @@ class ProjectService:
 
     def list_by_user(self, user_id: UUID) -> Sequence[Project]:
         return self.project_repo.get_all_by_user(user_id=user_id)
+
+    def update(
+        self,
+        project_id: UUID,
+        user_id: UUID,
+        name: str | None = None,
+        description: str | None | _Unset = UNSET,
+    ) -> Project:
+        try:
+            project = self.project_repo.get_by_id(project_id=project_id)
+
+            if project is None:
+                raise ResourceDoesNotExistException("The project does not exist.")
+
+            project_member = self.project_member_repo.get_by_project_and_member(
+                project_id=project_id,
+                user_id=user_id,
+            )
+
+            if project_member is None:
+                raise ForbiddenException("Access Forbidden.")
+
+            if project_member.role is not ProjectRole.OWNER:
+                raise ForbiddenException(
+                    "You do not have permission to change the project."
+                )
+
+            updated_project = self.project_repo.update(
+                project_id=project_id,
+                name=name,
+                description=description,
+            )
+
+            self.db.commit()
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+        return updated_project
