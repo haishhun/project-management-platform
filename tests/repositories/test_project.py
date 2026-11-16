@@ -280,25 +280,34 @@ def test_update_description_only(session):
     assert result.description == "Updated Description"
 
 
-def test_update_with_none_does_not_change_fields(session):
-    repo = ProjectRepository(session)
-
-    project = repo.create(
-        name="Original Name",
-        description="Original Description",
+def test_update_with_none_clears_description(session):
+    project = ProjectRepository(session).create(
+        name="Backend Platform",
+        description="Original description",
     )
 
-    repo.update(
+    updated_project = ProjectRepository(session).update(
         project_id=project.id,
-        name=None,
         description=None,
     )
 
-    result = repo.get_by_id(project.id)
+    assert updated_project.description is None
 
-    assert result is not None
-    assert result.name == "Original Name"
-    assert result.description == "Original Description"
+
+def test_update_without_fields_preserves_values(session):
+    project_repo = ProjectRepository(session)
+
+    project = project_repo.create(
+        name="Backend Platform",
+        description="Original description",
+    )
+
+    updated_project = project_repo.update(
+        project_id=project.id,
+    )
+
+    assert updated_project.name == "Backend Platform"
+    assert updated_project.description == "Original description"
 
 
 def test_delete(session):
