@@ -245,6 +245,10 @@ PostgreSQL
 - [x] User deletion
 - [x] Transaction management
 - [x] User service tests
+- [x] Configure user deletion behavior for memberships and tasks
+- [ ] Test user deletion with memberships and tasks
+- [ ] Raise a domain error when deleting a user who created tasks
+- [ ] Prevent deleting the sole owner of a project
 
 ### Project Service
 
@@ -257,41 +261,44 @@ PostgreSQL
 - [x] Automatically assign creator as OWNER
 - [x] Commit project and membership in one transaction
 - [x] Roll back transaction when an operation fails
-- [ ] Test successful project creation
-- [ ] Test automatic OWNER membership assignment
-- [ ] Test rollback when membership creation fails
+- [x] Validate that the owner exists
+- [x] Test successful project creation
+- [x] Test automatic OWNER membership assignment
+- [x] Test rollback when membership creation fails
+- [x] Test missing owner
 
 #### Project Retrieval
 
-- [ ] Get project by ID
-- [ ] Verify project membership before access
-- [ ] Prevent non-members from accessing projects
-- [ ] Test project retrieval
-- [ ] Test unauthorized access
+- [x] Get project by ID
+- [x] Verify project membership before access
+- [x] Prevent non-members from accessing projects
+- [x] Test project retrieval
+- [x] Test unauthorized access
 
 #### Project Listing
 
-- [ ] List projects belonging to the current user
-- [ ] Prevent returning unrelated projects
-- [ ] Test project listing
-- [ ] Test empty project lists
+- [x] List projects belonging to the current user
+- [x] Prevent returning unrelated projects
+- [x] Test project listing
+- [x] Test empty project lists
 
 #### Project Updates
 
-- [ ] Update project information
-- [ ] Verify OWNER permissions
-- [ ] Prevent MEMBER users from updating projects
-- [ ] Support partial updates
-- [ ] Test project updates
-- [ ] Test permission failures
+- [x] Update project information
+- [x] Verify OWNER permissions
+- [x] Prevent MEMBER users from updating projects
+- [x] Support partial updates
+- [x] Test project updates
+- [x] Test permission failures
 
 #### Project Deletion
 
-- [ ] Delete project
-- [ ] Verify OWNER permissions
-- [ ] Define and enforce related resource deletion behavior
-- [ ] Test project deletion
-- [ ] Test unauthorized deletion
+- [x] Delete project
+- [x] Verify OWNER permissions
+- [x] Define and enforce related resource deletion behavior
+- [x] Test project deletion
+- [x] Test unauthorized deletion
+- [x] Test deleting a missing project
 
 #### Project Membership Management
 
@@ -617,22 +624,23 @@ The goal is to ensure that every change is tested and checked before being merge
 
 **Current milestone:** Milestone 3 — Service Layer
 
-**Current feature:** ProjectService
+**Current feature:** User deletion rules, then project membership management
 
 **Implemented functionality:**
 
-- Project creation.
-- Automatic assignment of the creator as project OWNER.
-- Transaction management across project and membership creation.
-- Rollback on database failures.
+- UserService: registration, profile updates, deletion.
+- ProjectService: create, get, list, update and delete with membership-based authorization.
+- Owner-only project updates and deletion.
+- Cascading deletion of memberships and tasks with their project.
+- Transaction rollback on failures, covered by tests.
 
 **Immediate next steps:**
 
-1. Complete successful project creation tests.
-2. Verify rollback when owner membership creation fails.
-3. Run the complete test suite and code quality checks.
-4. Implement project retrieval with membership-based authorization.
-5. Continue with project listing and management operations.
+1. Test user deletion with memberships, assigned tasks and created tasks.
+2. Turn the database error for users who created tasks into a domain exception.
+3. Prevent deleting the sole owner of a project.
+4. Implement project membership management (add, remove, change role, protect the last owner).
+5. Start TaskService.
 
 ---
 
