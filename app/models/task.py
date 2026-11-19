@@ -74,8 +74,8 @@ class Task(Base):
         default=TaskPriority.MEDIUM,
         server_default=TaskPriority.MEDIUM.value,
     )
-    created_by_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="RESTRICT"),
+    created_by_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
     )
     assigned_to_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -94,7 +94,7 @@ class Task(Base):
         back_populates="tasks",
     )
 
-    created_by: Mapped["User"] = relationship(
+    created_by: Mapped["User | None"] = relationship(
         back_populates="created_tasks",
         foreign_keys=[created_by_id],
     )
