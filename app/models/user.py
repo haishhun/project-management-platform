@@ -42,7 +42,7 @@ class User(Base):
     created_tasks: Mapped[list["Task"]] = relationship(
         back_populates="created_by",
         foreign_keys="Task.created_by_id",
-        passive_deletes="all",
+        passive_deletes=True,
     )
 
     assigned_tasks: Mapped[list["Task"]] = relationship(
