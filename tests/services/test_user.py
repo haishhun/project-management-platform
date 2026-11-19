@@ -5,8 +5,16 @@ import pytest
 from app.core.exceptions import (
     EmailAlreadyExistsException,
     ResourceDoesNotExistException,
+    UserOwnsProjectsException,
 )
 from app.core.security import verify_password
+from app.repositories import (
+    ProjectMemberRepository,
+    ProjectRepository,
+    TaskRepository,
+    UserRepository,
+)
+from app.services.project import ProjectService
 from app.services.user import UserService
 
 
@@ -207,3 +215,120 @@ def test_register_rolls_back_after_integrity_error(session):
         last_name="User",
     )
     assert new_user.email == "third@test.com"
+
+
+def test_delete_user_removes_memberships_and_keeps_project(session):
+    service = UserService(session)
+    owner = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="a@test.com",
+        password="password",
+    )
+
+    member = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="ab@test.com",
+        password="password",
+    )
+    project = ProjectService(session).create(owner_id=owner.id, name="Project")
+    ProjectMemberRepository(session).create(project_id=project.id, user_id=member.id)
+    session.commit()
+
+    UserService(session).delete(member.id)
+
+    assert UserRepository(session).get_by_id(member.id) is None
+    assert (
+        ProjectMemberRepository(session).get_by_project_and_member(
+            project.id, member.id
+        )
+        is None
+    )
+    assert ProjectRepository(session).get_by_id(project.id) is not None
+
+
+def test_delete_user_unassigns_their_tasks(session):
+    service = UserService(session)
+    owner = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="a@test.com",
+        password="password",
+    )
+
+    member = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="ab@test.com",
+        password="password",
+    )
+    project = ProjectService(session).create(owner_id=owner.id, name="Project")
+    ProjectMemberRepository(session).create(project_id=project.id, user_id=member.id)
+    task = TaskRepository(session).create(
+        project_id=project.id,
+        title="Task",
+        created_by_id=owner.id,
+        assigned_to_id=member.id,
+    )
+    session.commit()
+
+    UserService(session).delete(member.id)
+
+    session.refresh(task)
+    assert task.assigned_to_id is None
+    assert task.created_by_id == owner.id
+
+
+def test_delete_user_keeps_tasks_they_created(session):
+    service = UserService(session)
+    owner = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="a@test.com",
+        password="password",
+    )
+
+    member = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="ab@test.com",
+        password="password",
+    )
+    project = ProjectService(session).create(owner_id=owner.id, name="Project")
+    ProjectMemberRepository(session).create(project_id=project.id, user_id=member.id)
+    task = TaskRepository(session).create(
+        project_id=project.id,
+        title="Task",
+        created_by_id=member.id,
+        assigned_to_id=member.id,
+    )
+    session.commit()
+
+    UserService(session).delete(member.id)
+
+    session.refresh(task)
+    assert task.created_by_id is None
+    assert task.assigned_to_id is None
+    assert UserRepository(session).get_by_id(member.id) is None
+
+
+def test_delete_user_who_owns_a_project_is_blocked(session):
+    service = UserService(session)
+    owner = service.register(
+        first_name="Test1",
+        last_name="Test2",
+        email="a@test.com",
+        password="password",
+    )
+    project = ProjectService(session).create(owner_id=owner.id, name="Project")
+
+    with pytest.raises(UserOwnsProjectsException):
+        UserService(session).delete(owner.id)
+
+    assert UserRepository(session).get_by_id(owner.id) is not None
+    assert ProjectRepository(session).get_by_id(project.id) is not None
+    assert (
+        ProjectMemberRepository(session).get_by_project_and_member(project.id, owner.id)
+        is not None
+    )
