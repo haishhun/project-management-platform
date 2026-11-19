@@ -6,16 +6,19 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import (
     EmailAlreadyExistsException,
     ResourceDoesNotExistException,
+    UserOwnsProjectsException,
 )
 from app.core.security import hash_password
 from app.models import User
-from app.repositories import UserRepository
+from app.models.project_member import ProjectRole
+from app.repositories import ProjectMemberRepository, UserRepository
 
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
         self.users = UserRepository(db)
+        self.project_members = ProjectMemberRepository(db)
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
@@ -62,6 +65,13 @@ class UserService:
 
     def delete(self, user_id: UUID) -> None:
         try:
+            owned = self.project_members.get_user_memberships(
+                user_id, role=ProjectRole.OWNER
+            )
+            if owned:
+                raise UserOwnsProjectsException(
+                    "Transfer or delete owned projects before deleting the user."
+                )
             self.users.delete(user_id)
             self.db.commit()
         except Exception:
