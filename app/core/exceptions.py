@@ -24,3 +24,6 @@ class ForbiddenException(ApplicationException):
 
 class EmailAlreadyExistsException(ApplicationException):
     pass
+
+class UserOwnsProjectsException(ApplicationException):
+    pass
