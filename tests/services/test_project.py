@@ -1,8 +1,7 @@
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import ForbiddenException, ResourceDoesNotExistException
 from app.models import Project
@@ -37,12 +36,12 @@ def test_create_project_and_assign_owner(session):
     assert membership.role == ProjectRole.OWNER
 
 
-def test_create_project_and_transaction_rollback(session):
+def test_create_project_owner_not_found(session):
     project_service = ProjectService(session)
 
-    with pytest.raises(IntegrityError):
+    with pytest.raises(ResourceDoesNotExistException):
         project_service.create(
-            owner_id=UUID(int=0),
+            owner_id=uuid4(),
             name="Project with invalid user",
         )
 
@@ -51,6 +50,31 @@ def test_create_project_and_transaction_rollback(session):
     )
 
     assert project is None
+
+
+def test_create_project_rolls_back_when_membership_creation_fails(session, monkeypatch):
+    user = UserRepository(session).create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    session.commit()
+
+    project_service = ProjectService(session)
+
+    def failing_create(*args, **kwargs):
+        raise RuntimeError("membership insert failed")
+
+    monkeypatch.setattr(project_service.project_member_repo, "create", failing_create)
+
+    with pytest.raises(RuntimeError):
+        project_service.create(owner_id=user.id, name="Rollback Project")
+
+    project = session.scalar(select(Project).where(Project.name == "Rollback Project"))
+
+    assert project is None
+    assert UserRepository(session).get_by_id(user.id) is not None
 
 
 def test_get_project_by_id_as_owner(session):
