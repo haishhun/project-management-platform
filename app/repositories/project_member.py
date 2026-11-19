@@ -44,6 +44,17 @@ class ProjectMemberRepository:
         result = self.db.execute(query)
         return result.scalars().all()
 
+    def get_user_memberships(
+        self, user_id: UUID, role: ProjectRole | None = None
+    ) -> Sequence[ProjectMember]:
+        query = select(ProjectMember).where(ProjectMember.user_id == user_id)
+        if role is not None:
+            query = query.where(ProjectMember.role == role)
+
+        query = query.order_by(ProjectMember.joined_at)
+        result = self.db.execute(query)
+        return result.scalars().all()
+
     def update(
         self, project_id: UUID, user_id: UUID, role: ProjectRole
     ) -> ProjectMember:
