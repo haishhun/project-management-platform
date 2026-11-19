@@ -9,7 +9,7 @@ from app.core.exceptions import (
 )
 from app.models import Project
 from app.models.project_member import ProjectRole
-from app.repositories import ProjectMemberRepository, ProjectRepository
+from app.repositories import ProjectMemberRepository, ProjectRepository, UserRepository
 from app.repositories.project import UNSET, _Unset
 
 
@@ -18,6 +18,7 @@ class ProjectService:
         self.db = db
         self.project_repo = ProjectRepository(db)
         self.project_member_repo = ProjectMemberRepository(db)
+        self.user_repo = UserRepository(db)
 
     def create(
         self,
@@ -25,7 +26,9 @@ class ProjectService:
         name: str,
         description: str | None = None,
     ) -> Project:
-
+        owner = self.user_repo.get_by_id(user_id=owner_id)
+        if owner is None:
+            raise ResourceDoesNotExistException("User does not exist.")
         try:
             new_project = self.project_repo.create(
                 name=name,
