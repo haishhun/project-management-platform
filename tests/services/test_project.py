@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import ForbiddenException, ResourceDoesNotExistException
 from app.models import Project
 from app.models.project_member import ProjectRole
-from app.repositories import ProjectMemberRepository, UserRepository
+from app.repositories import ProjectMemberRepository, TaskRepository, UserRepository
 from app.services.project import ProjectService
 
 
@@ -400,3 +400,44 @@ def test_update_project_not_found(session):
     project_service = ProjectService(session)
     with pytest.raises(ResourceDoesNotExistException):
         project_service.update(project_id=uuid4(), user_id=uuid4())
+
+
+def test_delete_project_as_owner(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_repo = ProjectMemberRepository(session)
+    task_repo = TaskRepository(session)
+    owner = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    task = task_repo.create(
+        project_id=project.id,
+        title="New Task",
+        created_by_id=owner.id,
+        assigned_to_id=owner.id,
+    )
+
+    project_id = project.id
+    owner_id = owner.id
+    task_id = task.id
+
+    project_service.delete(project_id=project_id, user_id=owner_id)
+    project_member = project_member_repo.get_by_project_and_member(
+        project_id=project_id, user_id=owner_id
+    )
+    user = user_repo.get_by_id(user_id=owner_id)
+    deleted_task = task_repo.get_by_id(task_id=task_id)
+
+    assert user is not None
+    assert project_member is None
+    assert deleted_task is None
+    with pytest.raises(ResourceDoesNotExistException):
+        project_service.get_by_id(project_id=project_id, user_id=owner_id)
