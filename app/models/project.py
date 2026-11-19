@@ -36,8 +36,12 @@ class Project(Base):
     )
     memberships: Mapped[list["ProjectMember"]] = relationship(
         back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     tasks: Mapped[list["Task"]] = relationship(
         back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
