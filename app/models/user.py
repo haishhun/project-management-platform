@@ -36,15 +36,17 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     project_memberships: Mapped[list["ProjectMember"]] = relationship(
-        back_populates="user",
+        back_populates="user", cascade="all, delete-orphan", passive_deletes=True
     )
 
     created_tasks: Mapped[list["Task"]] = relationship(
         back_populates="created_by",
         foreign_keys="Task.created_by_id",
+        passive_deletes="all",
     )
 
     assigned_tasks: Mapped[list["Task"]] = relationship(
         back_populates="assigned_to",
         foreign_keys="Task.assigned_to_id",
+        passive_deletes=True,
     )
