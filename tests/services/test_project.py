@@ -6,7 +6,12 @@ from sqlalchemy import select
 from app.core.exceptions import ForbiddenException, ResourceDoesNotExistException
 from app.models import Project
 from app.models.project_member import ProjectRole
-from app.repositories import ProjectMemberRepository, TaskRepository, UserRepository
+from app.repositories import (
+    ProjectMemberRepository,
+    ProjectRepository,
+    TaskRepository,
+    UserRepository,
+)
 from app.services.project import ProjectService
 
 
@@ -465,3 +470,76 @@ def test_delete_project_as_owner(session):
     assert deleted_task is None
     with pytest.raises(ResourceDoesNotExistException):
         project_service.get_by_id(project_id=project_id, user_id=owner_id)
+
+
+def test_delete_project_as_member(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_repo = ProjectMemberRepository(session)
+    project_repo = ProjectRepository(session)
+    owner = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    member = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    project_member_repo.create(
+        project_id=project.id,
+        user_id=member.id,
+        role=ProjectRole.MEMBER,
+    )
+    session.commit()
+    with pytest.raises(ForbiddenException):
+        project_service.delete(project_id=project.id, user_id=member.id)
+    found_project = project_repo.get_by_id(project.id)
+    found_project_membership = project_member_repo.get_by_project_and_member(
+        project.id, member.id
+    )
+
+    assert found_project is not None
+    assert found_project_membership is not None
+
+
+def test_delete_project_as_non_member(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_repo = ProjectRepository(session)
+    owner = user_repo.create(
+        email="a@test.com",
+        password_hash="test_password_hash",
+        first_name="Test1",
+        last_name="Test2",
+    )
+    non_member = user_repo.create(
+        email="a2@test.com",
+        password_hash="test_password_hash2",
+        first_name="Test3",
+        last_name="Test4",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Backend Platform",
+        description="A project management platform",
+    )
+    with pytest.raises(ForbiddenException):
+        project_service.delete(project_id=project.id, user_id=non_member.id)
+    found_project = project_repo.get_by_id(project.id)
+
+    assert found_project is not None
+
+
+def test_delete_project_not_found(session):
+    project_service = ProjectService(session)
+    with pytest.raises(ResourceDoesNotExistException):
+        project_service.delete(project_id=uuid4(), user_id=uuid4())
