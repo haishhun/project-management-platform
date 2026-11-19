@@ -316,3 +316,125 @@ def test_delete_project_membership_not_found(session):
 
     with pytest.raises(ResourceDoesNotExistException):
         project_member_repo.delete(project_id=uuid4(), user_id=uuid4())
+
+
+def test_get_user_memberships_returns_all_roles(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    owned_project = project_repo.create(name="Owned Project")
+    joined_project = project_repo.create(name="Joined Project")
+    project_member_repo.create(
+        project_id=owned_project.id, user_id=user.id, role=ProjectRole.OWNER
+    )
+    project_member_repo.create(
+        project_id=joined_project.id, user_id=user.id, role=ProjectRole.MEMBER
+    )
+
+    memberships = project_member_repo.get_user_memberships(user.id)
+
+    assert len(memberships) == 2
+    assert {m.project_id for m in memberships} == {
+        owned_project.id,
+        joined_project.id,
+    }
+
+
+def test_get_user_memberships_filters_by_owner_role(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    owned_project = project_repo.create(name="Owned Project")
+    joined_project = project_repo.create(name="Joined Project")
+    project_member_repo.create(
+        project_id=owned_project.id, user_id=user.id, role=ProjectRole.OWNER
+    )
+    project_member_repo.create(
+        project_id=joined_project.id, user_id=user.id, role=ProjectRole.MEMBER
+    )
+
+    memberships = project_member_repo.get_user_memberships(
+        user.id, role=ProjectRole.OWNER
+    )
+
+    assert len(memberships) == 1
+    assert memberships[0].project_id == owned_project.id
+    assert memberships[0].role == ProjectRole.OWNER
+
+
+def test_get_user_memberships_filters_by_member_role(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    owned_project = project_repo.create(name="Owned Project")
+    joined_project = project_repo.create(name="Joined Project")
+    project_member_repo.create(
+        project_id=owned_project.id, user_id=user.id, role=ProjectRole.OWNER
+    )
+    project_member_repo.create(
+        project_id=joined_project.id, user_id=user.id, role=ProjectRole.MEMBER
+    )
+
+    memberships = project_member_repo.get_user_memberships(
+        user.id, role=ProjectRole.MEMBER
+    )
+
+    assert len(memberships) == 1
+    assert memberships[0].project_id == joined_project.id
+    assert memberships[0].role == ProjectRole.MEMBER
+
+
+def test_get_user_memberships_excludes_other_users(session):
+    user_repo = UserRepository(session)
+    project_repo = ProjectRepository(session)
+    project_member_repo = ProjectMemberRepository(session)
+    user = user_repo.create(
+        first_name="Test",
+        last_name="User",
+        email="test@test.com",
+        password_hash="original_hash",
+    )
+    other_user = user_repo.create(
+        first_name="Other",
+        last_name="User",
+        email="other@test.com",
+        password_hash="other_hash",
+    )
+    project = project_repo.create(name="Shared Project")
+    project_member_repo.create(
+        project_id=project.id, user_id=user.id, role=ProjectRole.OWNER
+    )
+    project_member_repo.create(
+        project_id=project.id, user_id=other_user.id, role=ProjectRole.MEMBER
+    )
+
+    memberships = project_member_repo.get_user_memberships(user.id)
+
+    assert len(memberships) == 1
+    assert memberships[0].user_id == user.id
+
+
+def test_get_user_memberships_empty(session):
+    project_member_repo = ProjectMemberRepository(session)
+
+    memberships = project_member_repo.get_user_memberships(uuid4())
+
+    assert memberships == []
