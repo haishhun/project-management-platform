@@ -26,10 +26,13 @@ class ProjectService:
         name: str,
         description: str | None = None,
     ) -> Project:
-        owner = self.user_repo.get_by_id(user_id=owner_id)
-        if owner is None:
-            raise ResourceDoesNotExistException("User does not exist.")
+
         try:
+            owner = self.user_repo.get_by_id(user_id=owner_id)
+
+            if owner is None:
+                raise ResourceDoesNotExistException("User does not exist.")
+
             new_project = self.project_repo.create(
                 name=name,
                 description=description,
