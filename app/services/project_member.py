@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
@@ -54,6 +55,9 @@ class ProjectMemberService:
             )
             self.db.commit()
             return membership
+        except IntegrityError:
+            self.db.rollback()
+            raise ConflictException("User is already a project member.")
         except Exception:
             self.db.rollback()
             raise
