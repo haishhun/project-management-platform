@@ -28,3 +28,7 @@ class EmailAlreadyExistsException(ApplicationException):
 
 class UserOwnsProjectsException(ApplicationException):
     pass
+
+
+class ConflictException(ApplicationException):
+    pass
