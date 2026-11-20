@@ -42,6 +42,14 @@ PostgreSQL
 - Tests use an isolated PostgreSQL database.
 - Explicit typing and static analysis with MyPy.
 
+### Deletion rules
+
+| Deleted | Effect |
+|---|---|
+| Project | Its memberships and tasks are deleted. Users are kept. |
+| User | Their memberships are deleted. Tasks they created or were assigned stay, with creator or assignee set to empty. |
+| User who owns a project | Blocked until ownership is transferred or the project is deleted. |
+
 ---
 
 # Development Progress
@@ -157,6 +165,7 @@ PostgreSQL
 - [x] Create membership
 - [x] Get membership by project and user
 - [x] Get all project memberships
+- [x] Get all memberships of a user, optionally filtered by role
 - [x] Update membership role
 - [x] Delete membership
 - [x] Handle nonexistent memberships
@@ -246,9 +255,9 @@ PostgreSQL
 - [x] Transaction management
 - [x] User service tests
 - [x] Configure user deletion behavior for memberships and tasks
-- [ ] Test user deletion with memberships and tasks
-- [ ] Raise a domain error when deleting a user who created tasks
-- [ ] Prevent deleting the sole owner of a project
+- [x] Keep tasks when their creator or assignee is deleted
+- [x] Prevent deleting a user who owns a project
+- [x] Test user deletion with memberships and tasks
 
 ### Project Service
 
@@ -624,11 +633,11 @@ The goal is to ensure that every change is tested and checked before being merge
 
 **Current milestone:** Milestone 3 — Service Layer
 
-**Current feature:** User deletion rules, then project membership management
+**Current feature:** Project membership management
 
 **Implemented functionality:**
 
-- UserService: registration, profile updates, deletion.
+- UserService: registration, profile updates, deletion with the rules above.
 - ProjectService: create, get, list, update and delete with membership-based authorization.
 - Owner-only project updates and deletion.
 - Cascading deletion of memberships and tasks with their project.
@@ -636,10 +645,10 @@ The goal is to ensure that every change is tested and checked before being merge
 
 **Immediate next steps:**
 
-1. Test user deletion with memberships, assigned tasks and created tasks.
-2. Turn the database error for users who created tasks into a domain exception.
-3. Prevent deleting the sole owner of a project.
-4. Implement project membership management (add, remove, change role, protect the last owner).
+1. Define the permission rules for adding, removing and changing project members.
+2. Implement adding a member (owner only, MEMBER by default, no duplicates).
+3. Implement removing a member and leaving a project, protecting the last owner.
+4. Implement changing a member's role without leaving a project ownerless.
 5. Start TaskService.
 
 ---
