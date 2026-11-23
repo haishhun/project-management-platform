@@ -90,3 +90,46 @@ def test_add_member_as_regular_member(session):
         user_id=user2.id,
     )
     assert membership is None
+
+
+def test_add_member_as_non_member(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    actor = user_repo.create(
+        email="outsider@example.com",
+        password_hash="hashed_password",
+        first_name="Outsider",
+        last_name="User",
+    )
+    target = user_repo.create(
+        email="target@example.com",
+        password_hash="hashed_password",
+        first_name="Target",
+        last_name="User",
+    )
+
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Test Project",
+    )
+
+    with pytest.raises(ForbiddenException):
+        project_member_service.add_member(
+            project_id=project.id,
+            actor_id=actor.id,
+            user_id=target.id,
+        )
+
+    membership = project_member_service.project_member_repo.get_by_project_and_member(
+        project_id=project.id,
+        user_id=target.id,
+    )
+    assert membership is None
