@@ -172,13 +172,13 @@ def test_add_member_user_not_found(session):
         first_name="Owner",
         last_name="User",
     )
-    project_service.create(
+    project = project_service.create(
         owner_id=owner.id,
         name="Test Project",
     )
     with pytest.raises(ResourceDoesNotExistException):
         project_member_service.add_member(
-            project_id=uuid4(),
+            project_id=project.id,
             actor_id=owner.id,
             user_id=uuid4(),
         )
