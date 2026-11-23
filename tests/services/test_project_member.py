@@ -2,7 +2,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.exceptions import ForbiddenException, ResourceDoesNotExistException
+from app.core.exceptions import (
+    ConflictException,
+    ForbiddenException,
+    ResourceDoesNotExistException,
+)
 from app.models import ProjectMember
 from app.models.project_member import ProjectRole
 from app.repositories import ProjectMemberRepository, UserRepository
@@ -181,4 +185,38 @@ def test_add_member_user_not_found(session):
             project_id=project.id,
             actor_id=owner.id,
             user_id=uuid4(),
+        )
+
+
+def test_add_member_already_exists(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    target = user_repo.create(
+        email="target@example.com",
+        password_hash="hashed_password",
+        first_name="Target",
+        last_name="User",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Test Project",
+    )
+    project_member_service.add_member(
+        project_id=project.id,
+        actor_id=owner.id,
+        user_id=target.id,
+    )
+    with pytest.raises(ConflictException):
+        project_member_service.add_member(
+            project_id=project.id,
+            actor_id=owner.id,
+            user_id=target.id,
         )
