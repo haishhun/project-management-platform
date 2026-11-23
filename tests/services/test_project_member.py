@@ -159,3 +159,26 @@ def test_add_member_project_not_found(session):
             actor_id=owner.id,
             user_id=target.id,
         )
+
+
+def test_add_member_user_not_found(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    project_service.create(
+        owner_id=owner.id,
+        name="Test Project",
+    )
+    with pytest.raises(ResourceDoesNotExistException):
+        project_member_service.add_member(
+            project_id=uuid4(),
+            actor_id=owner.id,
+            user_id=uuid4(),
+        )
