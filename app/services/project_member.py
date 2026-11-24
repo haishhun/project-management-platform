@@ -61,3 +61,40 @@ class ProjectMemberService:
         except Exception:
             self.db.rollback()
             raise
+
+    def remove_member(
+        self,
+        project_id: UUID,
+        actor_id: UUID,
+        user_id: UUID,
+    ) -> None:
+        try:
+            project = self.project_repo.get_by_id(project_id=project_id)
+            if project is None:
+                raise ResourceDoesNotExistException("Project does not exist.")
+
+            actor_membership = self.project_member_repo.get_by_project_and_member(
+                project_id=project_id, user_id=actor_id
+            )
+            if actor_membership is None:
+                raise ResourceDoesNotExistException("Project does not exist.")
+            if actor_membership.role is not ProjectRole.OWNER:
+                raise ForbiddenException(
+                    "You do not have permission to remove members of the project."
+                )
+
+            target_membership = self.project_member_repo.get_by_project_and_member(
+                project_id=project_id,
+                user_id=user_id,
+            )
+            if target_membership is None:
+                raise ResourceDoesNotExistException(
+                    "User is not associated with this project."
+                )
+            if target_membership.role is ProjectRole.OWNER:
+                raise ForbiddenException("The project owner cannot be removed.")
+            self.project_member_repo.delete(project_id=project_id, user_id=user_id)
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
