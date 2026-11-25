@@ -45,7 +45,7 @@ def test_add_member_as_owner(session):
     assert isinstance(membership, ProjectMember)
     assert membership.project_id == project.id
     assert membership.user_id == user.id
-    assert membership.role is ProjectRole.MEMBER
+    assert membership.role == ProjectRole.MEMBER
 
     saved_membership = ProjectMemberRepository(session).get_by_project_and_member(
         project_id=project.id,
