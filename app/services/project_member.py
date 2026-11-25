@@ -35,7 +35,7 @@ class ProjectMemberService:
 
             if project_membership is None:
                 raise ForbiddenException("Access Forbidden.")
-            if project_membership.role is not ProjectRole.OWNER:
+            if project_membership.role != ProjectRole.OWNER:
                 raise ForbiddenException(
                     "You do not have permission to add members to the project."
                 )
@@ -78,7 +78,7 @@ class ProjectMemberService:
             )
             if actor_membership is None:
                 raise ResourceDoesNotExistException("Project does not exist.")
-            if actor_membership.role is not ProjectRole.OWNER:
+            if actor_membership.role != ProjectRole.OWNER:
                 raise ForbiddenException(
                     "You do not have permission to remove members of the project."
                 )
@@ -91,7 +91,7 @@ class ProjectMemberService:
                 raise ResourceDoesNotExistException(
                     "User is not associated with this project."
                 )
-            if target_membership.role is ProjectRole.OWNER:
+            if target_membership.role == ProjectRole.OWNER:
                 raise ForbiddenException("The project owner cannot be removed.")
             self.project_member_repo.delete(project_id=project_id, user_id=user_id)
             self.db.commit()

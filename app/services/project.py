@@ -81,7 +81,7 @@ class ProjectService:
             if project_member is None:
                 raise ForbiddenException("Access Forbidden.")
 
-            if project_member.role is not ProjectRole.OWNER:
+            if project_member.role != ProjectRole.OWNER:
                 raise ForbiddenException(
                     "You do not have permission to change the project."
                 )
@@ -115,7 +115,7 @@ class ProjectService:
             if project_member is None:
                 raise ForbiddenException("Access Forbidden.")
 
-            if project_member.role is not ProjectRole.OWNER:
+            if project_member.role != ProjectRole.OWNER:
                 raise ForbiddenException(
                     "You do not have permission to delete the project."
                 )
