@@ -391,3 +391,33 @@ def test_remove_member_owner_self(session):
     )
     assert still_member is not None
     assert still_member.role == ProjectRole.OWNER
+
+
+def test_remove_member_target_not_in_project(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    target = user_repo.create(
+        email="target@example.com",
+        password_hash="hashed_password",
+        first_name="Target",
+        last_name="User",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Test Project",
+    )
+
+    with pytest.raises(ResourceDoesNotExistException):
+        project_member_service.remove_member(
+            project_id=project.id,
+            actor_id=owner.id,
+            user_id=target.id,
+        )
