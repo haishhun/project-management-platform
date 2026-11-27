@@ -98,3 +98,26 @@ class ProjectMemberService:
         except Exception:
             self.db.rollback()
             raise
+
+    def leave_project(self, project_id: UUID, actor_id: UUID) -> None:
+        try:
+            project = self.project_repo.get_by_id(project_id=project_id)
+            if project is None:
+                raise ResourceDoesNotExistException("Project does not exist.")
+
+            actor_membership = self.project_member_repo.get_by_project_and_member(
+                project_id=project_id, user_id=actor_id
+            )
+            if actor_membership is None:
+                raise ResourceDoesNotExistException("Project does not exist.")
+
+            if actor_membership.role == ProjectRole.OWNER:
+                raise ForbiddenException(
+                    "The project owner cannot leave. Transfer ownership first."
+                )
+
+            self.project_member_repo.delete(project_id=project_id, user_id=actor_id)
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
