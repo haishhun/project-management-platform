@@ -421,3 +421,27 @@ def test_remove_member_target_not_in_project(session):
             actor_id=owner.id,
             user_id=target.id,
         )
+
+
+def test_remove_member_project_not_found(session):
+    user_repo = UserRepository(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    target = user_repo.create(
+        email="target@example.com",
+        password_hash="hashed_password",
+        first_name="Target",
+        last_name="User",
+    )
+    with pytest.raises(ResourceDoesNotExistException):
+        project_member_service.remove_member(
+            project_id=uuid4(),
+            actor_id=owner.id,
+            user_id=target.id,
+        )
