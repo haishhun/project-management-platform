@@ -360,3 +360,34 @@ def test_remove_member_as_non_member(session):
         user_id=member.id,
     )
     assert still_member is not None
+
+
+def test_remove_member_owner_self(session):
+    user_repo = UserRepository(session)
+    project_service = ProjectService(session)
+    project_member_service = ProjectMemberService(session)
+
+    owner = user_repo.create(
+        email="owner@example.com",
+        password_hash="hashed_password",
+        first_name="Owner",
+        last_name="User",
+    )
+    project = project_service.create(
+        owner_id=owner.id,
+        name="Test Project",
+    )
+
+    with pytest.raises(ForbiddenException):
+        project_member_service.remove_member(
+            project_id=project.id,
+            actor_id=owner.id,
+            user_id=owner.id,
+        )
+
+    still_member = ProjectMemberRepository(session).get_by_project_and_member(
+        project_id=project.id,
+        user_id=owner.id,
+    )
+    assert still_member is not None
+    assert still_member.role == ProjectRole.OWNER
