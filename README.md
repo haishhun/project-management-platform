@@ -311,15 +311,23 @@ PostgreSQL
 
 #### Project Membership Management
 
-- [ ] Add project member
-- [ ] Assign MEMBER role by default
-- [ ] Prevent duplicate memberships
-- [ ] Remove project member
+- [x] Implement ProjectMemberService
+- [x] Add project member (OWNER only)
+- [x] Assign MEMBER role by default
+- [x] Prevent duplicate memberships
+- [x] Handle concurrent duplicate adds as a conflict
+- [x] Remove project member (OWNER only)
+- [x] Prevent removing the project owner
+- [x] Return 404 to non-members when removing members or leaving
+- [x] Leave a project
+- [x] Prevent the owner from leaving
+- [x] Test adding members
+- [x] Test removing members
+- [ ] Test leaving a project
 - [ ] Change member role
-- [ ] Protect the last project owner
+- [ ] Transfer project ownership
 - [ ] Enforce exactly-one-owner business rule
-- [ ] Test membership management
-- [ ] Test ownership edge cases
+- [ ] Test role changes and ownership transfer
 
 ### Task Service
 
@@ -641,15 +649,15 @@ The goal is to ensure that every change is tested and checked before being merge
 - ProjectService: create, get, list, update and delete with membership-based authorization.
 - Owner-only project updates and deletion.
 - Cascading deletion of memberships and tasks with their project.
+- ProjectMemberService: add a member, remove a member and leave a project, with owner-only permissions and owner protection.
 - Transaction rollback on failures, covered by tests.
 
 **Immediate next steps:**
 
-1. Define the permission rules for adding, removing and changing project members.
-2. Implement adding a member (owner only, MEMBER by default, no duplicates).
-3. Implement removing a member and leaving a project, protecting the last owner.
-4. Implement changing a member's role without leaving a project ownerless.
-5. Start TaskService.
+1. Add tests for leaving a project.
+2. Implement changing a member's role without leaving a project ownerless.
+3. Implement ownership transfer, so an owner can leave or be deleted.
+4. Start TaskService.
 
 ---
 
